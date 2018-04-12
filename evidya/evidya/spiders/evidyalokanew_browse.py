@@ -27,7 +27,7 @@ class EvdnewBrowse(scrapy.Spider):
         import pdb;pdb.set_trace()
         data_json = json.loads((response.body).split('|')[-1].strip('[').strip(']').strip('[').strip(']'))
         csv = data_json.get('Data')
-        import pdb;pdb.set_trace()
+        
         for each in csv:
             dropdownname = each.get('DropDownName','')
             dropdownvalue = each.get('DropDownValue','')
