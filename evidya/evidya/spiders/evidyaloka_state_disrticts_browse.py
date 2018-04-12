@@ -48,7 +48,6 @@ class EvdcodesBrowse(scrapy.Spider):
         for each in csv:
             district_name = each.get('DropDownName','').strip()
             district_code = each.get('DropDownValue','').strip()
-            import pdb;pdb.set_trace()
             district_codes.update({district_code:district_name})
         self.final_dict.update({state_code:[district_codes, state_name]})
 

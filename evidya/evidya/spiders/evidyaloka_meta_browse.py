@@ -23,7 +23,6 @@ class EvdmetaBrowse(scrapy.Spider):
                     yield FormRequest('http://schoolreportcards.in/SRC-New/AdvanceSearch/AdvanceSearch.aspx', callback=self.parse_next,formdata=form_data1, meta = {'form_dict':form_dict , 'form_data':form_data1, 'state_name':value[-1], "district_name":value1})
 
     def parse_next(self, response):
-        import pdb;pdb.set_trace()
         state_name = response.meta.get('state_name', '')
         district_name = response.meta.get('district_name','')
         form_data = response.meta.get('form_data','')

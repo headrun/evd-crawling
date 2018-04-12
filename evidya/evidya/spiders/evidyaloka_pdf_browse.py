@@ -56,7 +56,6 @@ class EvdmetaBrowsepdf(scrapy.Spider):
         view_state = ''.join(sel.xpath('//input[@name="__VIEWSTATE"]/@value').extract())
         generator_view = ''.join(sel.xpath('//input[@id="__VIEWSTATEGENERATOR"]/@value').extract())
         for each_school_code in self.all_schools:
-                print each_school_code
                 
                 headers = {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -74,7 +73,6 @@ class EvdmetaBrowsepdf(scrapy.Spider):
                     ('RT', '1'),
                 )
                 url = 'http://schoolreportcards.in/SRC-New/ReportCard/ViewReport.aspx?T=1&AY=2016-17&cmbschool='+str(each_school_code).strip()+'&RT=1'
-                print url
                 yield Request(url, headers=headers, callback = self.parse_next)
 
     def parse_next(self, response): 
