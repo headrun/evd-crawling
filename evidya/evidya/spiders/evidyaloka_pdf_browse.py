@@ -6,7 +6,6 @@ import csv
 from scrapy.selector import Selector
 from scrapy.http import Request,FormRequest
 from evidya.items import *
-from pandas import read_csv
 from generic_functions import *
 from collections import OrderedDict
 from scrapy.xlib.pydispatch import dispatcher
@@ -19,34 +18,36 @@ class EvdmetaBrowsepdf(scrapy.Spider):
     def clean_it(self, text):
         return text.strip().encode('utf-8').replace('\xc2\xa0', ' ')
 
-    def __init__(self,state = '', **kwargs):
+    def __init__(self,state = '', district = '',  **kwargs):
         with open("information.json", "r") as data: 
              super(EvdmetaBrowsepdf,self).__init__(**kwargs)
              self.counter = 0
              self.final_json = OrderedDict()
              self.state = state
-             #self.district = district
+             self.district = district
              self.information = json.load(data)
+             self.file_name = "%s%s" % (self.state.replace(' ', '_'), '.csv')
+             with open("%s%s" % ('Complete_csv_json/',self.file_name)) as curren_dta:
+                    self.already_present_data = csv.reader(curren_dta)
+                    self.already_present_data = [line[2] for line in self.already_present_data if 'School_Code' not in line[2]]
+                    print len(self.already_present_data)
              with open('total_page_stats.csv') as csvdata:
                     self.csv_data = csv.reader(csvdata)
-                    self.one_state_data = [line for line in self.csv_data if line[-1]== self.state] #and line[8]==self.district
-                    #self.one_state_data = [line for line in self.csv_data if line[-1]== self.state and line[8]==self.district]
-                    self.all_schools = [ons[9] for ons in self.one_state_data ]
+                    self.one_state_data = [line for line in self.csv_data if line[-1]== self.state]
+                    self.all_schools = [ons[9] for ons in self.one_state_data if ons[9] not in self.already_present_data]
+                    print len(self.all_schools)
              
              self.headers = ['ref_url', 'School_Academic_Year', 'School_Code', 'School_Name', 'State', 'District', 'Block', 'Cluster', 'Village', 'Principal', 'Location', 'Pincode', 'School_Category', 'Lowest_Class', 'Highest_Class', 'Type_of_School', 'Management', 'Approachable_by_All_Weather_Road', 'Year_of_Establishment', 'Year_of_Recognition', 'Year_of_Upgradation_P_to_UP', 'Special_School_for_CWSN', 'Shift_School', 'Residential_School', 'Type_of_Residential_School', 'Pre_Primary_Section', 'Total_Students_Pre_Primary', 'Total_Teachers_Pre_Primary', 'Academic_Inspections', 'No_of_Visits_by_CRC_Coordinator', 'No_of_Visits_by_Block_Level_Officer','School_Development_Grant_Receipt','School_Development_Grant_Expenditure','School_Maintenance_Grant_Receipt', 'School_Maintenance_Grant_Expenditure', 'Regular_Teachers', 'Contract_Teachers', 'Graduate_or_above', 'Teachers_Male', 'Teachers_Female', 'Teachers_Aged_above', 'Head_Master', 'Trained_for_teaching_CWSN', 'Trained_in_use_of_Computer', 'Part_Time_Instructor', 'Teachers_Involved_in_Non_Teaching_Assignments', 'Avg_working_days_spent_on_Non_Tch_assignments', 'Teachers_with_Professional_Qualification', 'Teachers_Received_Inservice_Training', 'Medium_one', 'Medium_two', 'Medium_three', 'Status_of_School_Building', 'Boundary_wall', 'Classrooms_for_Teaching', 'Furniture_for_Students', 'Number_of_Other_Rooms', 'Classrooms_in_Good_Condition', 'Classrooms_Require_Minor_Repair', 'Classrooms_Require_Major_Repair', 'Separate_Room_for_HM', 'Electricity_Connection', 'Boys_Toilet_Seats_Total', 'Boys_Toilet_Seats_Functional', 'Girls_Toilet_Seats_Total', 'Girls_Toilet_Seats_Functional', 'CWSN_Friendly_Toilet', 'Drinking_Water_Facility', 'Drinking_Water_Functional', 'Library_Facility', 'No_of_Books_in_School_Library', 'Computer_Aided_Learning_Lab', 'Playground_Facility', 'Land_available_for_Playground', 'No_of_Computers_Available', 'No_of_Computers_Functional', 'Medical_check', 'Ramp_for_Disabled_Needed', 'Ramp_Available', 'Hand_Rails_for_Ramp', 'Classroom_Required_Major_Repair', 'Teachers_with_Prof_Qualification', 'Muslim_Girls_to_Muslim_Enrolment', 'Repeaters_to_Total_Enrolment', 'Change_in_Enrolment_over_Previous_Year', 'SC_Girls_to_SC_Enrolment', 'ST_Girls_to_ST_Enrolment', 'Pupil_Teacher_Ratio', 'Student_Classroom_Ratio', 'Girls_Enrolment', 'Muslim_Students', 'SC_Students', 'ST_Students', 'OBC_Enrolment']
-             self.file_name = "%s%s" % (self.state.replace(' ', '_'), '.csv')     # self.file_name = "%s%s" % (self.state, '.csv')
              self.csv_file = self.is_path_file_name(self.file_name)
              self.csv_file.writerow(self.headers)
-             dispatcher.connect(self.spider_closed, signals.spider_closed)
+             dispatcher.connect(self.spider_closed, signals.spider_closed) 
 
     def spider_closed(self, spider):
-        with open(self.file_name.replace('.csv', '.json'), 'w+') as fin:
+        with open("%s%s" % ('Complete_csv_json/', self.file_name.replace('.csv', '.json')), 'ab+') as fin:
             json.dump(self.final_json, fin)
 
     def is_path_file_name(self, excel_file_name):
-        if os.path.isfile(excel_file_name):
-                os.system('rm %s' % excel_file_name)
-        oupf = open(excel_file_name, 'ab+')
+        oupf = open("%s%s" % ('Complete_csv_json/', excel_file_name), 'ab+')
         todays_excel_file = csv.writer(oupf)
         return todays_excel_file
 
