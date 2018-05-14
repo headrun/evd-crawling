@@ -1,17 +1,21 @@
-import scrapy 
-import json
-import re
-import os
 import csv
-from scrapy.selector import Selector
-from scrapy.http import Request,FormRequest
-from evidya.items import *
-from generic_functions import *
-from collections import OrderedDict
+import json
+import os
+import re
+import scrapy 
+
+from collections            import OrderedDict
+from scrapy                 import signals
+from scrapy.http            import Request,FormRequest
+from scrapy.selector        import Selector
 from scrapy.xlib.pydispatch import dispatcher
-from scrapy import signals
+
+from evidya.items           import * # This is a bad usage, import * instead mention all that you need to import (,) separated. 
+from generic_functions      import * # --do--
+
 
 class EvdmetaBrowsepdf(scrapy.Spider):
+
     name = 'evidyaloka_pdf_browse'
     start_urls = ['http://schoolreportcards.in/SRC-New/AdvanceSearch/AdvanceSearch.aspx']
     
@@ -37,7 +41,21 @@ class EvdmetaBrowsepdf(scrapy.Spider):
                     self.all_schools = [ons[9] for ons in self.one_state_data if ons[9] not in self.already_present_data]
                     print len(self.all_schools)
              
-             self.headers = ['ref_url', 'School_Academic_Year', 'School_Code', 'School_Name', 'State', 'District', 'Block', 'Cluster', 'Village', 'Principal', 'Location', 'Pincode', 'School_Category', 'Lowest_Class', 'Highest_Class', 'Type_of_School', 'Management', 'Approachable_by_All_Weather_Road', 'Year_of_Establishment', 'Year_of_Recognition', 'Year_of_Upgradation_P_to_UP', 'Special_School_for_CWSN', 'Shift_School', 'Residential_School', 'Type_of_Residential_School', 'Pre_Primary_Section', 'Total_Students_Pre_Primary', 'Total_Teachers_Pre_Primary', 'Academic_Inspections', 'No_of_Visits_by_CRC_Coordinator', 'No_of_Visits_by_Block_Level_Officer','School_Development_Grant_Receipt','School_Development_Grant_Expenditure','School_Maintenance_Grant_Receipt', 'School_Maintenance_Grant_Expenditure', 'Regular_Teachers', 'Contract_Teachers', 'Graduate_or_above', 'Teachers_Male', 'Teachers_Female', 'Teachers_Aged_above', 'Head_Master', 'Trained_for_teaching_CWSN', 'Trained_in_use_of_Computer', 'Part_Time_Instructor', 'Teachers_Involved_in_Non_Teaching_Assignments', 'Avg_working_days_spent_on_Non_Tch_assignments', 'Teachers_with_Professional_Qualification', 'Teachers_Received_Inservice_Training', 'Medium_one', 'Medium_two', 'Medium_three', 'Status_of_School_Building', 'Boundary_wall', 'Classrooms_for_Teaching', 'Furniture_for_Students', 'Number_of_Other_Rooms', 'Classrooms_in_Good_Condition', 'Classrooms_Require_Minor_Repair', 'Classrooms_Require_Major_Repair', 'Separate_Room_for_HM', 'Electricity_Connection', 'Boys_Toilet_Seats_Total', 'Boys_Toilet_Seats_Functional', 'Girls_Toilet_Seats_Total', 'Girls_Toilet_Seats_Functional', 'CWSN_Friendly_Toilet', 'Drinking_Water_Facility', 'Drinking_Water_Functional', 'Library_Facility', 'No_of_Books_in_School_Library', 'Computer_Aided_Learning_Lab', 'Playground_Facility', 'Land_available_for_Playground', 'No_of_Computers_Available', 'No_of_Computers_Functional', 'Medical_check', 'Ramp_for_Disabled_Needed', 'Ramp_Available', 'Hand_Rails_for_Ramp', 'Classroom_Required_Major_Repair', 'Teachers_with_Prof_Qualification', 'Muslim_Girls_to_Muslim_Enrolment', 'Repeaters_to_Total_Enrolment', 'Change_in_Enrolment_over_Previous_Year', 'SC_Girls_to_SC_Enrolment', 'ST_Girls_to_ST_Enrolment', 'Pupil_Teacher_Ratio', 'Student_Classroom_Ratio', 'Girls_Enrolment', 'Muslim_Students', 'SC_Students', 'ST_Students', 'OBC_Enrolment']
+             self.headers = ['ref_url', 'School_Academic_Year', 'School_Code', 'School_Name', 'State', 'District', 'Block', 'Cluster', 'Village', 'Principal', 'Location', 'Pincode', 'School_Category',
+                            'Lowest_Class', 'Highest_Class', 'Type_of_School', 'Management', 'Approachable_by_All_Weather_Road', 'Year_of_Establishment', 'Year_of_Recognition', 
+                            'Year_of_Upgradation_P_to_UP', 'Special_School_for_CWSN', 'Shift_School', 'Residential_School', 'Type_of_Residential_School', 'Pre_Primary_Section', 
+                            'Total_Students_Pre_Primary', 'Total_Teachers_Pre_Primary', 'Academic_Inspections', 'No_of_Visits_by_CRC_Coordinator', 'No_of_Visits_by_Block_Level_Officer',
+                            'School_Development_Grant_Receipt','School_Development_Grant_Expenditure','School_Maintenance_Grant_Receipt', 'School_Maintenance_Grant_Expenditure', 'Regular_Teachers', 
+                            'Contract_Teachers', 'Graduate_or_above', 'Teachers_Male', 'Teachers_Female', 'Teachers_Aged_above', 'Head_Master', 'Trained_for_teaching_CWSN', 
+                            'Trained_in_use_of_Computer', 'Part_Time_Instructor', 'Teachers_Involved_in_Non_Teaching_Assignments', 'Avg_working_days_spent_on_Non_Tch_assignments', 
+                            'Teachers_with_Professional_Qualification', 'Teachers_Received_Inservice_Training', 'Medium_one', 'Medium_two', 'Medium_three', 'Status_of_School_Building', 
+                            'Boundary_wall', 'Classrooms_for_Teaching', 'Furniture_for_Students', 'Number_of_Other_Rooms', 'Classrooms_in_Good_Condition', 'Classrooms_Require_Minor_Repair', 
+                            'Classrooms_Require_Major_Repair', 'Separate_Room_for_HM', 'Electricity_Connection', 'Boys_Toilet_Seats_Total', 'Boys_Toilet_Seats_Functional', 'Girls_Toilet_Seats_Total',
+                            'Girls_Toilet_Seats_Functional', 'CWSN_Friendly_Toilet', 'Drinking_Water_Facility', 'Drinking_Water_Functional', 'Library_Facility', 'No_of_Books_in_School_Library', 
+                            'Computer_Aided_Learning_Lab', 'Playground_Facility', 'Land_available_for_Playground', 'No_of_Computers_Available', 'No_of_Computers_Functional', 'Medical_check', 
+                            'Ramp_for_Disabled_Needed', 'Ramp_Available', 'Hand_Rails_for_Ramp', 'Classroom_Required_Major_Repair', 'Teachers_with_Prof_Qualification', 
+                            'Muslim_Girls_to_Muslim_Enrolment', 'Repeaters_to_Total_Enrolment', 'Change_in_Enrolment_over_Previous_Year', 'SC_Girls_to_SC_Enrolment', 'ST_Girls_to_ST_Enrolment', 
+                            'Pupil_Teacher_Ratio', 'Student_Classroom_Ratio', 'Girls_Enrolment', 'Muslim_Students', 'SC_Students', 'ST_Students', 'OBC_Enrolment']
              self.csv_file = self.is_path_file_name(self.file_name)
              self.csv_file.writerow(self.headers)
              dispatcher.connect(self.spider_closed, signals.spider_closed) 
@@ -50,7 +68,6 @@ class EvdmetaBrowsepdf(scrapy.Spider):
         oupf = open("%s%s" % ('Complete_csv_json/', excel_file_name), 'ab+')
         todays_excel_file = csv.writer(oupf)
         return todays_excel_file
-
 
     def parse(self, response):
         sel = Selector(response)
@@ -82,13 +99,21 @@ class EvdmetaBrowsepdf(scrapy.Spider):
         coo = html.replace('\\r\\n', '').replace('\\/', '/')
         coo = coo.strip("'").strip(":").strip("'").strip(',').strip("'")
         sel = Selector(text=coo)
+        
+        state, block, district, cluster, village, principal = get_list_of_textstrings_on_xpath(sel, ['//div[@id="STATNAME1"]//text()', '//div[@id="BLKNAME1"]//text()', 
+                                                                '//div[@id="DistrictName1"]//text()', '//div[@id="CLUNAME1"]//text()', '//div[@id="VILNAME1"]//text()', 
+                                                                '//div[@id="HTCHNAME1"]//text()'])
+        cluster = self.clean_it(cluster)
+        principal = self.clean_it(principal)
+        '''
         state =  ''.join(sel.xpath('//div[@id="STATNAME1"]//text()').extract()).strip()
         block = ''.join(sel.xpath('//div[@id="BLKNAME1"]//text()').extract()).strip()
         district = ''.join(sel.xpath('//div[@id="DistrictName1"]//text()').extract()).strip() 
         cluster = ''.join(sel.xpath('//div[@id="CLUNAME1"]//text()').extract()).strip().encode('utf-8').replace('\xc2\xa0', ' ')
         village =''.join(sel.xpath('//div[@id="VILNAME1"]//text()').extract()).strip()
         principal = ''.join(sel.xpath('//div[@id="HTCHNAME1"]//text()').extract()).strip().encode('utf-8').replace('\xc2\xa0','')
-        
+        '''
+        # can do similarly for the follwoing xpaths extraction as above.
         acad_year =  ''.join(sel.xpath('//div[@id="ACYEAR1"]//text()').extract()).strip()
         school_code = ''.join(sel.xpath('//div[@id="SCHCD1"]//text()').extract()).strip()
         school_name = ''.join(sel.xpath('//div[@id="SCHNAME1"]//text()').extract()).strip().encode('utf-8').replace('\xc2\xa0', ' ')
@@ -176,7 +201,17 @@ class EvdmetaBrowsepdf(scrapy.Spider):
         sc_stud_percent = ''.join(sel.xpath('//div[@id="SCStudents1"]//text()').extract()).strip()
         st_stud_percent = ''.join(sel.xpath('//div[@id="STSTUDENTS1"]//text()').extract()).strip()
         obc_enrol_percent = ''.join(sel.xpath('//div[@id="OBCENR1"]//text()').extract()).strip() 
-        values = [response.url,  acad_year ,  school_code,  school_name,  state  ,  district ,  block ,  cluster ,  village,  principal,  location ,   pincode ,  school_cate ,  lowest_class  ,  highest_class ,  school_type ,  management ,  road,  est_year,  reg_year,  upgrade,  cwsn_spl ,  shift_school,  resi_school,  type_resi,  pre_primary_sec,  pre_students,  total_teachers,  acad_inspections,  crc_visit, officer_visit,  dev_receipt,  dev_expenditr,  maint_receipt,  maint_expenditure,  regular_teachrs ,  contract_teachrs ,  graduate_teachrs,  male_teachrs ,  female_teachers,  teach_age55,  head_master ,  cwsn_trained ,  comp_trained ,  part_time_instruc ,  non_teach ,  avg_workg_days ,  prof_qual_teachrs ,  inserv_training ,  medium_one ,  medium_two ,  medium_three ,  school_buildg ,  bound_wall,  class_rooms,  furniture,  other_rooms,  class_good_cond,  minor_repair ,  major_repair,  hm,  elec_connection ,  boys_toilet_seat_total ,  boys_toilet_seat_func ,  girls_toilet_seat_total ,  girls_toilet_Seat_func ,  cwsn_toilet  ,  drinkg_water ,  drinkg_water_func ,  library_facility ,  books_in_lib ,  comptr_lab ,  play_grnd ,  land_for_playgrnd ,  comptr_available ,  comp_funct ,  medical_check ,  ramp_disabld_needed ,  ramp_avail ,  hand_rails ,  class_req_repair ,  prof_qual_teach ,  muslim_enroll_percnt ,  total_enrol_repetrs ,  change_in_enrol ,  sc_grls_enrol ,  st_girls_enrol ,  pupil_teachr_ratio ,  studnt_classrm_ratio ,  girl_enrol_percent ,  muslim_stud_percent ,  sc_stud_percent ,  st_stud_percent ,  obc_enrol_percent]
+        
+        values = [  response.url, acad_year, school_code, school_name, state, district, block, cluster, village, principal, location, pincode, school_cate, lowest_class, highest_class,  school_type,
+                    management, road, est_year, reg_year, upgrade, cwsn_spl, shift_school, resi_school, type_resi, pre_primary_sec, pre_students, total_teachers, acad_inspections, crc_visit, 
+                    officer_visit, dev_receipt, dev_expenditr, maint_receipt, maint_expenditure, regular_teachrs, contract_teachrs, graduate_teachrs, male_teachrs, female_teachers, teach_age55, 
+                    head_master, cwsn_trained, comp_trained, part_time_instruc, non_teach, avg_workg_days, prof_qual_teachrs, inserv_training, medium_one, medium_two, medium_three, school_buildg,
+                    bound_wall, class_rooms, furniture, other_rooms, class_good_cond, minor_repair, major_repair, hm, elec_connection, boys_toilet_seat_total, boys_toilet_seat_func, 
+                    girls_toilet_seat_total, girls_toilet_Seat_func, cwsn_toilet, drinkg_water, drinkg_water_func, library_facility, books_in_lib, comptr_lab, play_grnd, land_for_playgrnd,
+                    comptr_available, comp_funct, medical_check, ramp_disabld_needed, ramp_avail, hand_rails, class_req_repair, prof_qual_teach, muslim_enroll_percnt, total_enrol_repetrs,
+                    change_in_enrol, sc_grls_enrol, st_girls_enrol, pupil_teachr_ratio, studnt_classrm_ratio, girl_enrol_percent, muslim_stud_percent, sc_stud_percent, st_stud_percent,
+                    obc_enrol_percent ]
+
         mydict = OrderedDict()
         for head, valu in zip(self.headers, values):
             mydict.update({head:valu})
