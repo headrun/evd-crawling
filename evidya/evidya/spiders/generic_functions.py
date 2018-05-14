@@ -74,7 +74,7 @@ def md5(x):
     return hashlib.md5(xcode(x)).hexdigest()
 
 def get_list_of_textstrings_on_xpath(elem, xpath_list):
-    # need to have '/text()' in each xpath_string
+    # Note: need to have '/text()' in each xpath_string
     list_of_texts = []
     for xpath_string in xpath_list:
         text_string = ''.join(elem.xpath(xpath_string).extract()).strip()
